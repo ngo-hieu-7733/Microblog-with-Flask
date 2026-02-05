@@ -2,8 +2,10 @@
 flask
 python-dotenv
 
-# form
+# form, login
 flask-wtf
+flask-login
+email-validator
 
 # database
 flask-sqlalchemy
