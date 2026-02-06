@@ -4,7 +4,8 @@ from app import db, login
 from typing import Optional
 from datetime import datetime, timezone
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import UserMixin
+from flask_login import UserMixin   # Use this module to auto implement required properties and a method
+from hashlib import md5
 
 class User(UserMixin, db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
@@ -12,9 +13,11 @@ class User(UserMixin, db.Model):
     email: so.Mapped[str] = so.mapped_column(sa.String(120), index=True, unique=True)
     # Optional[str] = str | None
     password_hash: so.Mapped[Optional[str]] = so.mapped_column(sa.String(256))
+    about_me: so.Mapped[Optional[str]] = so.mapped_column(sa.String(140))
+    last_seen: so.Mapped[Optional[datetime]] = so.mapped_column(default=lambda: datetime.now(timezone.utc))
 
     posts: so.WriteOnlyMapped['Post'] = so.relationship(back_populates='author')
-    
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
@@ -26,6 +29,10 @@ class User(UserMixin, db.Model):
     @login.user_loader
     def load_user(id):
         return db.session.get(User, int(id))
+
+    def avatar(self, size):
+        digest = md5(self.email.lower().encode('utf-8')).hexdigest()
+        return f'https://www.gravatar.com/avatar/{digest}?d=identicons&s={size}'
 
     def __repr__(self):
         return f'<User {self.username}>'
